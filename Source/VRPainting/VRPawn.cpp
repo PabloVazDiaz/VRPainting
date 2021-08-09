@@ -3,7 +3,7 @@
 
 #include "VRPawn.h"
 #include "Engine/World.h"
-#include "HandController.h"
+
 
 AVRPawn::AVRPawn()
 {
@@ -32,5 +32,11 @@ void AVRPawn::BeginPlay()
 
 }
 
-
+void AVRPawn::SetupPlayerInputComponent(UInputComponent * PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	UE_LOG(LogTemp, Warning, TEXT("Bind Actions"));
+	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Pressed, this, &AVRPawn::RightTriggerPressed);
+	PlayerInputComponent->BindAction(TEXT("RightTrigger"), EInputEvent::IE_Released, this, &AVRPawn::RightTriggerReleased);
+}
 
