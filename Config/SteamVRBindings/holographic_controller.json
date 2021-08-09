@@ -8,17 +8,6 @@
 		{
 			"sources": [
 				{
-					"mode": "button",
-					"path": "/user/hand/right/input/grip",
-					"inputs":
-					{
-						"click":
-						{
-							"output": "/actions/main/in/RightTrigger"
-						}
-					}
-				},
-				{
 					"mode": "trigger",
 					"path": "/user/hand/right/input/trigger",
 					"inputs":

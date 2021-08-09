@@ -2,26 +2,74 @@
 
 
 #include "Stroke.h"
+#include "Components/SplineMeshComponent.h"
 
-// Sets default values
 AStroke::AStroke()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(Root);
 
+	StrokeMeshes = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("StrokeMeshes"));
+	StrokeMeshes->SetupAttachment(Root);
+	JointMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("JointMesh"));
+	JointMesh->SetupAttachment(Root);
 }
 
-// Called when the game starts or when spawned
-void AStroke::BeginPlay()
+void AStroke::Update(FVector CursorLocation)
 {
-	Super::BeginPlay();
+	if (PreviousCursorLocation.IsNearlyZero()) 
+	{
+		PreviousCursorLocation = CursorLocation;
+		JointMesh->AddInstance(GetNextJointTransform(CursorLocation));
+		return;
+	}
 	
+	StrokeMeshes->AddInstance(GetNextSegmentTransform(CursorLocation));
+	JointMesh->AddInstance(GetNextJointTransform(CursorLocation));
+
+
+	PreviousCursorLocation = CursorLocation;
 }
 
-// Called every frame
-void AStroke::Tick(float DeltaTime)
+FTransform AStroke::GetNextSegmentTransform(FVector CurrentLocation) const
 {
-	Super::Tick(DeltaTime);
+	FTransform SegmentTransform;
+
+	SegmentTransform.SetScale3D(GetNextSegmentScale(CurrentLocation));
+	SegmentTransform.SetRotation(GetNextSegmentRotation(CurrentLocation));
+	SegmentTransform.SetLocation(GetNextSegmentLocation(CurrentLocation));
+
+	return SegmentTransform;
+}
+
+FVector AStroke::GetNextSegmentLocation(FVector CurrentLocation) const
+{
+	return GetTransform().InverseTransformPosition(PreviousCursorLocation);
+}
+
+FQuat AStroke::GetNextSegmentRotation(FVector CurrentLocation) const
+{
+
+	FVector Segment = CurrentLocation - PreviousCursorLocation;
+	FVector SegmentNormal = Segment.GetSafeNormal();
+	return FQuat::FindBetweenNormals(FVector::ForwardVector, SegmentNormal);
 
 }
 
+FVector AStroke::GetNextSegmentScale(FVector CurrentLocation) const
+{
+
+	FVector Segment = CurrentLocation - PreviousCursorLocation ;
+
+	return FVector(Segment.Size(),1,1);
+}
+
+FTransform AStroke::GetNextJointTransform(FVector CurrentLocation) const
+{
+	FTransform JointTransform;
+
+	JointTransform.SetLocation(GetTransform().InverseTransformPosition(CurrentLocation));
+
+	return JointTransform;
+}
